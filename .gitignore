@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Virtual envs
+.venv/
+venv/
+ENV/
+env/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Outputs / generated artifacts
+results/
+plots/
+*.png
+*.pdf
+*.svg
+
+# Data products (generated)
+data/*.tsv
+data/*.txt
+data/*.csv
+
+# Keep raw data files
+#! data/*.vcf
+#! data/*.vcf.gz
+#! data/*.tbi
