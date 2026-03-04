@@ -10,13 +10,13 @@ fi
 
 mkdir -p results
 
-echo "=== [0/4] Precheck ==="
+echo "=== [1/2] Preprocess: Precheck ==="
 if [[ ! -f "data/1000G_chr21_pruned.vcf.gz" ]]; then
   echo "ERROR: Missing data/1000G_chr21_pruned.vcf.gz"
   exit 1
 fi
 
-echo "=== [1/4] Build emissions.tsv (if missing) ==="
+echo "=== [2/2] Preprocess: Build emissions.tsv (if missing) ==="
 SAMPLE="${SAMPLE:-HG00099}"
 POPA_KEY="${POPA_KEY:-AFR_AF}"
 POPB_KEY="${POPB_KEY:-EUR_AF}"
@@ -42,7 +42,7 @@ print("rows:", len(df), "cols:", list(df.columns))
 print(df.head(2).to_string(index=False))
 PY
 
-echo "=== [2/4] Test 1: Simulation accuracy (ground truth) ==="
+echo "=== [1/4] Test 1: Simulation accuracy (ground truth) ==="
 $PYTHON scripts/simulate_admixed.py \
   --emissions data/emissions.tsv \
   --out_genotype data/sim_genotype.tsv \
@@ -64,11 +64,11 @@ $PYTHON scripts/benchmark_metrics.py \
 echo "Plotting truth vs pred..."
 $PYTHON scripts/plot_truth_vs_pred.py >/dev/null || true
 
-echo "=== [3/4] Test 2: Robustness sweep (rho x flip_rate x seeds) ==="
+echo "=== [2/4] Test 2: Robustness sweep (rho x flip_rate x seeds) ==="
 $PYTHON scripts/run_benchmark_noise.py
 $PYTHON scripts/plot_benchmark_noise.py >/dev/null || true
 
-echo "=== [4/4] Test 3: Baseline comparison (no transitions) ==="
+echo "=== [3/4] Test 3: Baseline comparison (no transitions) ==="
 $PYTHON scripts/baseline_independent.py \
   --emissions data/emissions.tsv \
   --genotype data/sim_genotype.tsv \
@@ -84,7 +84,7 @@ $PYTHON scripts/benchmark_metrics.py \
   --truth data/sim_truth.tsv \
   --pred data/sim_pred_baseline.tsv
 
-echo "=== [5/4] Test 4: Real-data plausibility (AFR vs EUR top-10) ==="
+echo "=== [4/4] Test 4: Real-data plausibility (AFR vs EUR top-10) ==="
 $PYTHON scripts/find_pure_samples.py
 $PYTHON scripts/run_real_eval.py
 $PYTHON scripts/plot_real_eval.py >/dev/null || true
