@@ -1,14 +1,46 @@
 # Local Ancestry Inference with HMM (chr21)
 
-A simplified Hidden Markov Model (HMM) implementation for **Local Ancestry Inference (LAI)** on chromosome 21.
+In this project, we built a simplified Hidden Markov Model (HMM) implementation for **Local Ancestry Inference (LAI)** on chromosome 21.
 
-This tool:
+This tool does the following 4 things:
 - Builds emission probabilities from population allele frequencies  
 - Uses recombination-aware transitions  
 - Runs Viterbi decoding to infer ancestry blocks  
 - Benchmarks accuracy, switch detection, and robustness to noise  
 
 The repository includes simulation, benchmarking, and real-data validation tools.
+
+---
+
+# Repository Structure
+
+```
+main.py                  - HMM CLI runner
+model.py                 - Transition + emission logic
+viterbi.py               - Viterbi decoding
+
+scripts/
+  make_inputs.py         - Generate emissions + genotype
+  simulate_admixed.py    - Create simulated admixed genome
+  benchmark_metrics.py   - Accuracy + switch metrics
+  baseline_independent.py- Independent-site baseline
+  run_benchmark_noise.py - Grid benchmark (rho + noise)
+  run_real_eval.py       - Evaluate on real “pure” samples
+  plot_*.py              - Visualization scripts
+
+run_all_tests.sh         - Run full pipeline
+```
+
+---
+
+# Installation
+
+## Requirements
+
+- Python 3.9+
+- numpy
+- pandas
+- matplotlib
 
 ---
 
@@ -38,133 +70,15 @@ results/
 
 ---
 
-# Installation
+# Troubleshooting
 
-## Requirements
-
-- Python 3.9+
-- numpy
-- pandas
-- matplotlib
-
----
-
-# Repository Structure
+If you see:
 
 ```
-main.py                  - HMM CLI runner
-model.py                 - Transition + emission logic
-viterbi.py               - Viterbi decoding
-
-scripts/
-  make_inputs.py         - Generate emissions + genotype
-  simulate_admixed.py    - Create simulated admixed genome
-  benchmark_metrics.py   - Accuracy + switch metrics
-  baseline_independent.py- Independent-site baseline
-  run_benchmark_noise.py - Grid benchmark (rho + noise)
-  run_real_eval.py       - Evaluate on real “pure” samples
-  plot_*.py              - Visualization scripts
-
-run_all_tests.sh         - Run full pipeline
+FileNotFoundError: emissions.tsv
 ```
 
----
-
-# Tests Included
-
-We built several tests to evaluate different aspects of the method.
-
----
-
-## 1. Simulated Admixed Genome (Core Accuracy Test)
-
-**Purpose:**  
-Measure whether the HMM correctly recovers ancestry blocks when the true ancestry is known.
-
-**What it does:**
-- Simulates an admixed genome  
-- Runs HMM inference  
-- Compares prediction to ground truth  
-- Computes:
-  - Accuracy  
-  - True vs predicted switch counts  
-  - Ancestry skew  
-
-**Why this matters:**  
-This directly measures whether the HMM works as intended under ideal conditions.
-
-Output files:
-
-```
-data/sim_pred.tsv
-data/sim_truth.tsv
-results/truth_vs_pred.png
-```
-
----
-
-## 2. Baseline Comparison (Independent Sites)
-
-**Purpose:**  
-Show that modeling transitions improves performance.
-
-**What it does:**
-- Runs a naive per-site classifier  
-- Ignores recombination  
-- Compares to HMM results  
-
-**Why this matters:**  
-Demonstrates that ancestry blocks are not independent — transitions matter.
-
----
-
-## 3. Robustness Benchmark (Noise + Recombination Sweep)
-
-**Purpose:**  
-Test how stable the method is under:
-- Different recombination rates (rho)  
-- Different genotype noise levels  
-
-**What it does:**
-- Runs many simulations across:
-  - rho grid  
-  - flip_rate grid  
-  - multiple random seeds  
-- Aggregates results  
-
-Outputs:
-
-```
-results/bench_noise.tsv
-results/accuracy_vs_rho.png
-results/skew_vs_rho.png
-```
-
-**Why this matters:**  
-Evaluates model robustness and stability.
-
----
-
-## 4. Real Data Sanity Check (Pure AFR / EUR Samples)
-
-**Purpose:**  
-Verify behavior on real 1000G samples assumed to be ancestry-pure.
-
-**What it does:**
-- Runs inference on known AFR and EUR samples  
-- Measures fraction of predicted ancestry  
-- Evaluates switch frequency  
-
-Outputs:
-
-```
-data/real_eval.tsv
-data/real_eval_scatter.png
-data/real_eval_box.png
-```
-
-**Why this matters:**  
-Confirms the model does not artificially hallucinate switches or mixed ancestry on pure samples.
+Make sure `make_inputs.py` has been run (this is handled automatically in `run_all_tests.sh`).
 
 ---
 
@@ -207,12 +121,91 @@ Decoding:
 
 ---
 
-# Troubleshooting
+# Tests Included
 
-If you see:
+We built 4 tests to evaluate different aspects of the method.
+
+---
+
+## 1. Simulated Admixed Genome (Core Accuracy Test)
+
+**Purpose:**  
+Measure whether the HMM correctly recovers ancestry blocks when the true ancestry is known
+
+**What it does:**
+- Simulates an admixed genome  
+- Runs HMM inference  
+- Compares prediction to ground truth  
+- Computes:
+  - Accuracy  
+  - True vs predicted switch counts  
+  - Ancestry skew  
+
+Output files:
 
 ```
-FileNotFoundError: emissions.tsv
+data/sim_pred.tsv        # predicted ancestry from HMM
+data/sim_truth.tsv       # ground truth ancestry from simulation
+results/truth_vs_pred.png  # visualization of prediction vs truth
 ```
 
-Make sure `make_inputs.py` has been run (this is handled automatically in `run_all_tests.sh`).
+---
+
+## 2. Baseline Comparison (Independent Sites)
+
+**Purpose:**  
+Show that modeling ancestry transitions improves prediction compared to independent per-site classification
+
+**What it does:**
+- Runs a naive per-site classifier  
+- Ignores recombination  
+- Compares to HMM results  
+
+Output files:
+
+```
+data/sim_pred.tsv           # HMM predictions
+data/sim_pred_baseline.tsv  # baseline per-site predictions
+```
+---
+
+## 3. Robustness Benchmark (Noise + Recombination Sweep)
+
+**Purpose:**  
+Test how stable the method is under:
+- Different recombination rates (rho)  
+- Different genotype noise levels  
+
+**What it does:**
+- Runs many simulations across:
+  - rho grid  
+  - flip_rate grid  
+  - multiple random seeds  
+- Aggregates performance metrics across runs
+
+Outputs:
+
+```
+results/bench_noise.tsv        # aggregated benchmark results
+results/accuracy_vs_rho.png    # accuracy vs recombination rate
+results/skew_vs_rho.png        # ancestry skew vs recombination rate
+```
+
+---
+
+## 4. Real Data Sanity Check (Pure AFR / EUR Samples)
+
+**Purpose:**  
+Verify behavior on real 1000G samples that are expected to have mostly single ancestry to confirm that the model does not artificially hallucinate switches or mixed ancestry on pure samples
+
+**What it does:**
+- Runs inference on known AFR and EUR samples  
+- Computes predicted ancestry proportions and switch counts
+
+Outputs:
+
+```
+data/real_eval.tsv           # summary statistics for real samples
+data/real_eval_scatter.png   # ancestry proportion visualization
+data/real_eval_box.png       # switch frequency comparison
+```
